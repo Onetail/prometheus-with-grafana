@@ -1,0 +1,61 @@
+version: '3.7'
+
+services:
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    networks:
+      - prom
+
+  alertmanager:
+    container_name: dashboard-alertmanager
+    image: prom/alertmanager:latest
+    volumes:
+      - type: bind
+        source: ./docker/alertmanager/alertmanager.yml
+        target: /etc/alertmanager/alertmanager.yml
+        read_only: true
+    ports:
+      - "9093:9093"
+      - "9094:9094"
+    networks:
+      - prom
+
+  prometheus:
+    container_name: dashboard-prometheus
+    depends_on:
+      - alertmanager
+    image: prom/prometheus:latest
+    volumes:
+      - type: bind
+        source: ./docker/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+      - type: bind
+        source: ./docker/prometheus/alert-rules.yml
+        target: /etc/prometheus/alert-rules.yml
+        read_only: true
+      - './data/prometheus:/var/lib/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - prom
+
+  grafana:
+    container_name: dashboard-grafana
+    depends_on:
+      - prometheus
+    image: grafana/grafana:latest
+    volumes:
+      - './data/grafana:/var/lib/grafana'
+
+    ports:
+      - "3000:3000"
+    networks:
+      - prom
+      
+networks:
+  prom:
+    driver: bridge

@@ -1,0 +1,14 @@
+global:
+  resolve_timeout: 1m
+
+route:
+  receiver: line-notify
+  group_interval: 10s
+  repeat_interval: 10m
+  
+receivers:
+- name: line-notify
+  webhook_configs:
+  - url: http://192.168.1.109:7009/api/v1/alertManager/remind
+    send_resolved: true
+    
